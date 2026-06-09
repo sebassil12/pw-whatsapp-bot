@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Form
+from fastapi import APIRouter, Form, Response
 from app.core.config import settings
 from app.services.media_service import MediaService
 from app.services.gemini_service import GeminiService
 from app.services.twilio_service import TwilioService
+from twilio.twiml.messaging_response import MessagingResponse
 
 router = APIRouter()
 
@@ -17,11 +18,10 @@ async def whatsapp_webhook(
     twilio = TwilioService()
 
     if not MediaUrl0 or not MediaContentType0:
-        twilio.send_whatsapp_message(
-            to_number=From,
-            body="Please send a photo of the vaccine card."
-        )
-        return {"status": "no_media", "message_sid": MessageSid}
+        twiml = MessagingResponse()
+        twiml.message("Please send a photo of the vaccine card.")
+        return Response(content=str(twiml), media_type="application/xml")
+
 
     image_bytes = MediaService.download_bytes(
         media_url=MediaUrl0,
